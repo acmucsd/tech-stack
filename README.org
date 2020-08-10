@@ -10,18 +10,14 @@ technology stack of ACM @ UCSD. You will find files such as:
 
 * Introduction
 
-ACM @ UCSD's previous tech stack was split across multiple providers; GCP,
-Heroku, Netlify, etc. Consolidation of most of the provided services onto
-self-controlled cloud services would be beneficial for billing purposes. This
-document lists the steps taken to migrate most of the tech stack to Azure and AWS.
-
-This document will be included as part of the =tech-stack= repository, so you may
-read on the process at your leisure.
+ACM @ UCSD's tech stack is complex enough to warrant documentation. This repository,
+as well as this document, provide a description so as to test and deploy the technology
+stack.
 
 Deployment and provisioning of instances supported by Ansible and Terraform.
 
-* Migration Plan
-The previous tech stack had the following main services:
+* Tech Stack Layout
+The tech stack has the following main services:
 - Membership Portal UI & API
 - ACM Live
 - Minecraft Server
