@@ -29,3 +29,119 @@ each one.
 
 We will begin by provisioning instances for each service.
 
+* Provisioning
+Speaking with Aaron Eason about the system specifications of his previous instances
+for each service, we know that:
+- ACM Live requires 16 GB of RAM and 4 vCPU cores.
+- The Minecraft server requires 8 GB of RAM.
+
+The other services most likely require a maximum of 1 GB of RAM.[fn:current-stack-requirements]
+
+In order to maintain uptime for all components of the stack, each
+service will run on a separate instance of appropriate size.
+
+As of now, AWS takes too much of a cost for all of the services above; therefore,
+we'll split the cost between Azure and AWS.
+
+Additionally, each service will be provisioned with separate Ansible
+playbooks.
+
+We'll begin with the easiest instances to plan, which are those for
+small services; BreadBot and Password Manager.
+
+#+BEGIN_SRC terraform :tangle instances.tf
+provider "aws" {
+  region = "us-west-1"
+}
+
+# Ubuntu 20.04 LTS instance, for good measure
+# Find other AMI's at https://cloud-images.ubuntu.com/locator/ec2/
+resource "aws_instance" "breadbot" {
+  ami           = "ami-0cd230f950c3de5d8"
+  instance_type = "t3a.nano"
+  tags {
+    Name = "BreadBot"
+  }
+}
+
+resource "aws_instance" "pass" {
+  ami           = "ami-0cd230f950c3de5d8"
+  instance_type = "t3a.nano"
+  tags {
+    Name = "Password Manager"
+  }
+}
+#+END_SRC
+
+ACM Live requires a more demanding server. Particularly, =t3= instances
+shouldn't be used due to their potential CPU throttling on a server
+with constant workload. We can use =m5= instances:
+
+#+BEGIN_SRC terraform :tangle instances.tf
+# ACM Live runs on Ubuntu 16.04 LTS
+# We'll use a HVM instance of it, no extra stuff on top.
+resource "aws_instance" "live" {
+  ami           = "ami-0a63cd87767e10ed4"
+  instance_type = "m5a.large"
+  tags {
+    Name = "ACM Live"
+  }
+}
+
+#+END_SRC
+
+Minecraft is too expensive to run on AWS; a third-party provider might be more
+viable in terms of budget. For now, we'll exclude from AWS provisioning.
+
+We will also include instances for the membership portal; we will need
+one for the API, and we'll use AWS' RDS in order to host the PostgreSQL
+database:
+
+#+BEGIN_SRC terraform :tangle instances.tf
+resource "aws_instance" "membership-portal" {
+  ami           = "ami-0a63cd87767e10ed4"
+  instance_type = "t3a.small"
+  tags {
+    Name = "Membership Portal API"
+  }
+}
+
+resource "aws_db_instance" "membership-portal-db" {
+  allocated_storage = 10
+  engine            = "postgres"
+  instance_class    = "db.t3.micro"
+  name              = var.dbName
+  username          = var.dbUser
+  password          = var.dbPass
+}
+#+END_SRC
+
+Note the above variables used originate using the provided =.env= file. Edit
+its contents with values of your choice. The playbooks will also use them
+to properly deploy =.env= files.
+
+Using the [[https://calculator.aws][AWS Calculator]], we obtain the cost for all the instances per year:
+| Instance            | Instance Type | Cost Per Month |
+|---------------------+---------------+----------------|
+| BreadBot            | t3a.nano      |           5.29 |
+| Pass                | t3a.nano      |           5.29 |
+| ACM Live            | m5a.large     |          85.73 |
+| Portal API          | t3a.small     |          17.48 |
+| Portal Database     | db.t3.micro   |          16.55 |
+|---------------------+---------------+----------------|
+| Total Cost / Month: |               |         130.34 |
+| Total Cost / Year:  |               |        1564.08 |
+|---------------------+---------------+----------------|
+#+TBLFM: @7$3=vsum(@I..@II)::@8$3=vsum(@I..@II)*12
+
+Assuming all goes well, running Terraform will deploy the stack.
+#+BEGIN_SRC sh
+terraform init && terraform apply
+#+END_SRC
+
+We will now begin deploying the software for each service.
+We'll document the SSH commands used in tandem with the respective Ansible task
+and role.
+
+[fn:current-stack-requirements] Funnily enough, this is hard to quantify properly. Pass and BreadBot both occupied the GCP =f1.micro=, which has 0.6 GB of RAM, so maybe a bit more is useful. The API, however, is up for discussion, considering Heroku's less obvious nature with system requirements.
+
