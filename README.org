@@ -191,7 +191,7 @@ You can also set these parameters manually in your SSH configuration file for
 the Terraform-provisioned instances.[fn:ssh-terraform]
 
 First, we'll want to install Docker by following the [[https://docs.docker.com/engine/install/ubuntu/][installation guide]] for Ubuntu:
-#+BEGIN_SRC sh :dir /ssh:pass:~/ :results drawer
+#+BEGIN_SRC sh :dir /ssh:pass|sudo:pass:~/ :results drawer
 sudo apt-get update
 sudo apt-get install -y \
     apt-transport-https \
@@ -210,7 +210,7 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 Similarly for Docker Compose, using this [[https://docs.docker.com/compose/install/][installation guide]]:
 
-#+BEGIN_SRC sh :dir /ssh:pass:~/
+#+BEGIN_SRC sh :dir /ssh:pass|sudo:pass:~/
 sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
@@ -238,8 +238,8 @@ mkdir ~/bw-data
 
 Afterwards, all we have to do is spin up the Docker Compose service.
 
-#+BEGIN_SRC sh :dir /ssh:pass:~/
-docker-compose up -d
+#+BEGIN_SRC sh :dir /ssh:pass|sudo:pass:~/ :results drawer
+sudo docker-compose up -d
 #+END_SRC
 
 The Ansible role =pass= covers this process for a brand new Ubuntu instance.

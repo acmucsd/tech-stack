@@ -30,7 +30,7 @@ services:
     environment:
       ACME_AGREE: "true" # agree to Let's Encrypt Subscriber Agreement
       DOMAIN: ${PASS_DOMAIN} # CHANGE THIS! Used for Auto Let's Encrypt SSL
-      EMAIL: ${PASS_SMTP_EMAIL} # CHANGE THIS! Optional, provided to Let's Encrypt
+      EMAIL: ${PASS_SSL_EMAIL} # CHANGE THIS! Optional, provided to Let's Encrypt
 
 volumes:
   caddycerts:
