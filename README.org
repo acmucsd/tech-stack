@@ -145,3 +145,105 @@ and role.
 
 [fn:current-stack-requirements] Funnily enough, this is hard to quantify properly. Pass and BreadBot both occupied the GCP =f1.micro=, which has 0.6 GB of RAM, so maybe a bit more is useful. The API, however, is up for discussion, considering Heroku's less obvious nature with system requirements.
 
+* Before Configuring
+For debugging purposes, the =tech-stack= repo provides
+a Vagrantfile to deploy test instances locally. You can boot each of them by
+installing Vagrant and VirtualBox; afterwards, you run this command in the terminal:
+
+#+BEGIN_SRC sh
+vagrant up
+#+END_SRC
+
+For the purposes of making this documentation easier to follow, we'll assume
+that you are provisioning instances to configure using either the provided
+Terraform file or the provided Vagrantfile.
+
+=tech-stack= provides two Ansible inventory files in order to ease its use;
+=testing= and =production=; =testing= points to the local Ansible boxes, whereas
+=production= points to the Terraform-provisioned instances; you may use either
+one by including it in each Ansible playbook command:
+#+BEGIN_SRC sh
+ansible-playbook -i <inventory>
+#+END_SRC
+
+* Password Manager
+:PROPERTIES:
+
+:END:
+
+The password manager is, in essence, a =bitwarden_rs= instance deployed on top
+of a Bitwarden image. We will use the =pass= Ansible host for all the following
+commands once we start building the playbook.
+
+The easiest way, by far, to install =bitwarden_rs= is to use the Docker Compose tutorial
+provided by the [[https://github.com/dani-garcia/bitwarden_rs/wiki/Using-Docker-Compose][bitwarden_rs wiki]].
+
+First, configure the remote machine to be able to connect to it using your SSH
+keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using a
+Vagrant box, use this command to import the =pass= settings to your
+configuration:
+
+#+BEGIN_SRC sh
+vagrant ssh-config --host pass >> $HOME/.ssh/config
+#+END_SRC
+
+You can also set these parameters manually in your SSH configuration file for
+the Terraform-provisioned instances.[fn:ssh-terraform]
+
+First, we'll want to install Docker by following the [[https://docs.docker.com/engine/install/ubuntu/][installation guide]] for Ubuntu:
+#+BEGIN_SRC sh :dir /ssh:pass:~/ :results drawer
+sudo apt-get update
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+#+END_SRC
+
+Similarly for Docker Compose, using this [[https://docs.docker.com/compose/install/][installation guide]]:
+
+#+BEGIN_SRC sh :dir /ssh:pass:~/
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+docker-compose --version
+#+END_SRC
+
+#+RESULTS:
+| docker-compose version 1.26.2 | build eefe0d31 |
+
+Second, we'll need to copy over the Docker Compose file for the =pass= instance, provided
+in the repo, along with the environment variables for it:
+
+#+BEGIN_SRC sh
+scp ./files/pass/docker-compose.yml pass:~/
+scp ./files/pass/.env pass:~/
+scp ./files/pass/Caddyfile pass:~/
+#+END_SRC
+
+Afterwards, we'll want to log into the pass instance and create the directory used
+by =bitwarden_rs= in the same directory.
+
+#+BEGIN_SRC sh :dir /ssh:pass:~/
+mkdir ~/bw-data
+#+END_SRC
+
+Afterwards, all we have to do is spin up the Docker Compose service.
+
+#+BEGIN_SRC sh :dir /ssh:pass:~/
+docker-compose up -d
+#+END_SRC
+
+The Ansible role =pass= covers this process for a brand new Ubuntu instance.
+
+[fn:ssh-terraform] In reality, this is not probably necessary; AWS/Azure will likely configure
+SSH keys for likely accounts in the instances, but that will require some Terraform configuration;
+good task for later.

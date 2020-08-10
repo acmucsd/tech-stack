@@ -1,0 +1,36 @@
+# docker-compose.yml
+version: "3"
+
+services:
+  bitwarden:
+    image: bitwardenrs/server
+    restart: always
+    volumes:
+      - ./bw-data:/data
+    environment:
+      WEBSOCKET_ENABLED: ${PASS_WEBSOCKET_ENABLED} # Required to use websockets
+      SIGNUPS_ALLOWED: ${PASS_SIGNUPS_ALLOWED} # set to false to disable signups
+      SMTP_HOST: ${PASS_SMTP_HOST}
+      SMTP_PORT: ${PASS_SMTP_PORT}
+      SMTP_SSL: ${PASS_SMTP_SSL}
+      SMTP_FROM: ${PASS_SMTP_FROM}
+      SMTP_USERNAME: ${PASS_SMTP_USERNAME}
+      SMTP_PASSWORD: ${PASS_SMTP_PASSWORD}
+      DOMAIN: ${PASS_DOMAIN}
+
+  caddy:
+    image: abiosoft/caddy
+    restart: always
+    volumes:
+      - ./Caddyfile:/etc/Caddyfile:ro
+      - caddycerts:/root/.caddy
+    ports:
+      - 80:80 # needed for Let's Encrypt
+      - 443:443
+    environment:
+      ACME_AGREE: "true" # agree to Let's Encrypt Subscriber Agreement
+      DOMAIN: ${PASS_DOMAIN} # CHANGE THIS! Used for Auto Let's Encrypt SSL
+      EMAIL: ${PASS_SMTP_EMAIL} # CHANGE THIS! Optional, provided to Let's Encrypt
+
+volumes:
+  caddycerts:
