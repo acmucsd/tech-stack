@@ -166,10 +166,19 @@ one by including it in each Ansible playbook command:
 ansible-playbook -i <inventory>
 #+END_SRC
 
-* Password Manager
-:PROPERTIES:
+It is also recommended you set all of the environment variables in every file for
+each service you wish to configure. There are =.env.example= files provided for
+each service; all that is necessary is to set the variables for each instance
+by copying each of the files and then adding the secrets:
 
-:END:
+#+BEGIN_SRC sh
+cp .env.example .env
+#+END_SRC
+
+A self-hosted Vault instance would fix the problem of hosting secrets like these,
+but that's too complex for this setup.
+
+* Password Manager
 
 The password manager is, in essence, a =bitwarden_rs= instance deployed on top
 of a Bitwarden image. We will use the =pass= Ansible host for all the following
@@ -244,6 +253,77 @@ sudo docker-compose up -d
 
 The Ansible role =pass= covers this process for a brand new Ubuntu instance.
 
+Up next, we will configure BreadBot.
+
 [fn:ssh-terraform] In reality, this is not probably necessary; AWS/Azure will likely configure
 SSH keys for likely accounts in the instances, but that will require some Terraform configuration;
 good task for later.
+
+* BreadBot
+
+BreadBot is the Discord bot for ACM, and is a Node.js bot running on a light
+instance. Installation, while time-consuming, is not difficult at all.
+
+We will use the =bot= Ansible host for all the following commands once we start
+building the playbook.
+
+First, we will install all the required dependencies: git, npm and Node:
+#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer
+sudo apt-get install -y curl git
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt-get install -y nodejs gcc g++ make
+#+END_SRC
+
+Second, we will clone the Git repo for BreadBot in the home directory:
+We'll also assume the main user to run BreadBot is saved in the environment variable
+=BREADBOT_USER= on the remote shell:
+
+#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer :var BREADBOT_USER="breadbot"
+sudo mkdir -p /opt
+git clone https://github.com/acmucsd/discord-bot /opt/discord-bot
+sudo chown -R $BREADBOT_USER:$BREADBOT_USER /opt/discord-bot
+#+END_SRC
+
+Afterwards, we will copy over the set-up environment variables using the provided .env file:
+#+BEGIN_SRC sh
+scp ./files/breadbot/.env bot:/opt/discord-bot/
+#+END_SRC
+
+Finally, we will install all the required Node dependencies:
+#+BEGIN_SRC sh :dir /ssh:bot:/opt/discord-bot :results drawer
+npm install
+#+END_SRC
+
+Additionally, we would like to ensure the Discord bot remains running even when our shell dies.
+The easiest way to manage this (considering Ansible will also manipulate our instances) is using
+a Systemd service unit. These are not that hard to configure, and we really just need a basic service
+to import the environment variable and run the =npm= task for BreadBot. If you want to peruse the file,
+you can find it at =files/breadbot/service.conf= but in all essence, the important part is:
+
+#+BEGIN_SRC conf
+[Service]
+EnvironmentFile=/opt/discord-bot/.env
+ExecStart=npm run start
+WorkingDirectory=/opt/discord-bot
+#+END_SRC
+
+We'll copy this service unit file over to the server and install it under the system services. Run this
+on your machine:
+#+BEGIN_SRC sh
+scp ./files/breadbot/breadbot.service bot:/opt/discord-bot
+#+END_SRC
+
+Afterwards, run this on the =bot= instance:
+#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer
+sudo mv /opt/discord-bot/breadbot.service /etc/systemd/system
+sudo chown root:root /etc/systemd/system/breadbot.service
+#+END_SRC
+
+Now, we simply have to reload the Systemd daemon and start the service. From here on out, Systemd is responsible
+to manage the BreadBot task:
+#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer
+sudo systemctl daemon-reload
+sudo systemctl start breadbot.service
+#+END_SRC
+
+The Ansible role =breadbot= covers this process for a brand new Ubuntu instance.

@@ -1,0 +1,15 @@
+[Unit]
+Description=BreadBot - The Discord Bot for ACM @ UCSD
+Documentation=https://github.com/acmucsd/discord-bot
+After=network.target
+
+[Service]
+EnvironmentFile=/opt/discord-bot/.env
+Type=simple
+User=breadbot
+ExecStart=npm run start
+WorkingDirectory=/opt/discord-bot
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
