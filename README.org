@@ -269,7 +269,7 @@ building the playbook.
 
 Configure the remote machine to be able to connect to it using your SSH
 keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using a
-Vagrant box, use this command to import the =pass= settings to your
+Vagrant box, use this command to import the =bot= instance settings to your
 configuration:
 
 #+BEGIN_SRC sh
@@ -345,7 +345,7 @@ this functionality easier to configure, though.
 
 Remember to configure the remote machine to be able to connect to it using your
 SSH keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using
-a Vagrant box, use this command to import the =pass= settings to your
+a Vagrant box, use this command to import the =mc= instance settings to your
 configuration:
 
 #+BEGIN_SRC sh
