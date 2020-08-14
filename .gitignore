@@ -46,3 +46,10 @@ override.tf.json
 *.box
 
 # End of https://www.toptal.com/developers/gitignore/api/vagrant,ansible,terraform
+
+# ACM tech-stack gitignore starts here
+# .env files
+.env
+
+# *.json files are also ignored due to possibly containing credentials
+*.json

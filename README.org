@@ -267,6 +267,15 @@ instance. Installation, while time-consuming, is not difficult at all.
 We will use the =bot= Ansible host for all the following commands once we start
 building the playbook.
 
+Configure the remote machine to be able to connect to it using your SSH
+keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using a
+Vagrant box, use this command to import the =pass= settings to your
+configuration:
+
+#+BEGIN_SRC sh
+vagrant ssh-config --host bot >> $HOME/.ssh/config
+#+END_SRC
+
 First, we will install all the required dependencies: git, npm and Node:
 #+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer
 sudo apt-get install -y curl git
@@ -327,3 +336,168 @@ sudo systemctl start breadbot.service
 #+END_SRC
 
 The Ansible role =breadbot= covers this process for a brand new Ubuntu instance.
+
+* Minecraft
+
+Minecraft is a tricky instance to configure, primarily because of the backup
+functionality, thanks to its location within GDrive. =rclone= makes
+this functionality easier to configure, though.
+
+Remember to configure the remote machine to be able to connect to it using your
+SSH keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using
+a Vagrant box, use this command to import the =pass= settings to your
+configuration:
+
+#+BEGIN_SRC sh
+vagrant ssh-config --host mc >> $HOME/.ssh/config
+#+END_SRC
+
+Fortunately, the bulk of configuration for the Minecraft server is already
+written by Gideon Tong over at his [[https://github.com/gideontong/ACM-Minecraft-Config][GitHub repo]]. Although not 100% complete, it's
+good enough of a starter and is already imported to this repository.
+Additionally to the provided GitHub repo, however, we have included:
+
+- the Gdrive Rclone configuration to allow mounting the backup location
+- the service files for running the server
+- the scripts to load the Overviewer world rendering on the browser
+- the world restore functionality using an additional Ansible playbook
+
+The first, most important thing is to obtain a Gdrive service account for the
+address =minecraft@acmucsd.org=, which is where the Minecraft server hosts its
+backup. While there are many [[https://help.talend.com/reader/E3i03eb7IpvsigwC58fxQg/ol2OwTHmFbDiMjQl3ES5QA][tutorials]] out there on how to do that, obtaining
+the service account credentials JSON is up to you. These credentials allow easy
+and safe mounting of the Gdrive on the backup instance, which is where we'll do
+backups.
+
+Once you obtain the Google service account JSON file, you should add it to the
+Minecraft files directory as =files/mc/credentials.json= so that the Ansible
+playbook can properly extract it (*DO NOT CHECK INTO VERSION CONTROL*)
+
+As for the Rclone configuration file that is included with the =mc= directory,
+the Google console side is documented enough by following the =rclone config=
+command interactive prompts on the server, so it's best to run that remotely and
+get a new configuration file, should default credentials and others items
+change. Otherwise, if nothing's changed, you may use the checked in version of
+the configuration file.
+
+We will first create the user =minecraft=:
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+sudo useradd -m minecraft
+#+END_SRC
+
+Then, we'll create the configuration directory on the server:
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+sudo mkdir -p /opt/backup
+sudo chown -R minecraft:minecraft /opt/backup
+#+END_SRC
+
+Afterwards, we'll transfer the configuration files there. Run this on your local machine:
+#+BEGIN_SRC sh
+scp ./files/mc/rclone.conf mc:~/
+scp ./files/mc/gdrive.service mc:~/
+scp ./files/mc/credentials.json mc:~/
+scp ./files/mc/minecraft.service mc:~/
+#+END_SRC
+
+Then run this on the server instance:
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+sudo mkdir -p /opt/backup
+sudo chown -R minecraft:minecraft /opt/backup
+sudo mv ~/credentials.json /opt/backup
+sudo mv ~/rclone.conf /opt/backup
+sudo mv ~/gdrive.service /etc/systemd/system
+sudo mv ~/minecraft.service /etc/systemd/system
+#+END_SRC
+
+Now, we will need to install two programs; =rclone= and =borg=, used for the
+backup functionality. We'll also need to install Java for running the Minecraft
+server, and We'll also install Minecraft Overviewer, necessary for rendering the
+map browser viewer of the Minecraft map. This process requires adding an APT
+repository to the machine as well. Lastly, we also want Caddy, a webserver to
+display the Minecraft browser map we'll generate later:
+
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+echo 'deb https://overviewer.org/debian ./' \
+    | sudo tee -a /etc/apt/sources.list.d/overviewer.list
+echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" \
+    | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
+wget -O - https://overviewer.org/debian/overviewer.gpg.asc | sudo apt-key add - # key for Overviewer
+sudo apt-get update
+curl https://rclone.org/install.sh | sudo bash
+sudo apt-get install -y default-jdk minecraft-overviewer caddy
+#+END_SRC
+
+The latest =borg= binary has a more involved installation process, since =borg=
+has an older version in the Ubuntu repositories. We need a newer version so we
+can easily extract the latest backup from the Borg backup repository whenever
+we initialize a new Minecraft instance:
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+curl -s https://api.github.com/repos/borgbackup/borg/releases/latest \
+  | grep browser_download_url \
+  | grep linux64 \
+  | cut -d '"' -f 4 | head -n 1 \
+  | wget -qi - -O borg-linux64
+
+sudo cp borg-linux64 /usr/local/bin/borg
+sudo chown root:root /usr/local/bin/borg
+sudo chmod 755 /usr/local/bin/borg
+#+END_SRC
+
+Now we will need to construct the Rclone mount for the backup functionality.
+Fortunately, the service unit file required for the mount was already written by
+Gideon, so we'll just have to copy the service file to the remote machine and
+start and enable the service:
+
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+sudo mkdir -p /mnt/gdrive
+sudo chown -R minecraft:minecraft /mnt/gdrive
+sudo systemctl daemon-reload
+sudo systemctl enable gdrive
+sudo systemctl start gdrive
+#+END_SRC
+
+We will now extract the latest backup from the Borg backup repository.
+This will take a while, so sit back:
+#+BEGIN_SRC sh :dir /ssh:mc|sudo:mc:~/ :results drawer
+cd /
+export BORG_PASSPHRASE='jyPr5QToT&Wca6hfrvtZA5'
+export LAST_BORG_BACKUP=$(borg list --last 1 /mnt/gdrive/backup | cut -d ' ' -f1)
+borg extract /mnt/gdrive/backup::$LAST_BORG_BACKUP
+#+END_SRC
+
+Now that we're done with restoring the world, as well as the other necessary
+plugins and configuration files, we'll install the Paper Minecraft server JAR
+directly from the [[https://papermc.io/api/v1/paper/1.15.2/latest/download][Paper API]]. We can download the file in the respective
+=minecraft= directory:
+
+#+BEGIN_SRC sh :dir /ssh:mc:~/ :results drawer
+wget https://papermc.io/api/v1/paper/1.15.2/latest/download -O /opt/minecraft/paper.jar
+sudo chown minecraft:minecraft /opt/minecraft/paper.jar
+#+END_SRC
+
+Next, we'll render the Minecraft map using Overviewer and also provide the proper Caddyfile
+directives to Caddy, in order to serve the HTML map generated by Overviewer when done:
+#+BEGIN_SRC sh :dir /ssh:mc:~/ :results drawer
+overviewer.py /opt/minecraft/world /opt/minecraft/map
+cat <<EOF | sudo tee -a /etc/caddy/Caddyfile
+mc.acmucsd.com {
+  root * /opt/minecraft/map
+  file_server
+}
+EOF
+
+sudo systemctl restart caddy
+#+END_SRC
+
+We'll add the crontab entry to run the nightly maintenance script for the Minecraft
+server:
+#+BEGIN_SRC sh :dir /ssh:mc:~/ :results drawer
+cat <<EOF | crontab -
+0 5 * * * /opt/minecraft/nightly.sh
+EOF
+#+END_SRC
+
+And finally, after many commands, you may now start the Minecraft server:
+#+BEGIN_SRC sh :dir /ssh:mc:~/ :results drawer
+sudo systemctl start minecraft
+#+END_SRC

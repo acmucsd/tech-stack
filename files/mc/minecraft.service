@@ -1,0 +1,16 @@
+[Unit]
+Description=ACM Minecraft Server Runner
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=notify
+User=minecraft
+KillMode=none
+RestartSec=10
+ExecStart=screen -S minecraft -d -m /opt/minecraft/start.sh
+ExecStop=screen -S minecraft -p 0 -X stuff "stop^M"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

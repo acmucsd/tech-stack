@@ -21,4 +21,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     bot.vm.hostname = "bot-acm.test"
     bot.vm.network :private_network, ip: "192.168.60.3"
   end
+
+  config.vm.define "mc" do |mc|
+    mc.vm.hostname = "mc-acm.test"
+    mc.vm.network :private_network, ip: "192.168.60.4"
+  end
 end
