@@ -501,3 +501,100 @@ And finally, after many commands, you may now start the Minecraft server:
 #+BEGIN_SRC sh :dir /ssh:mc:~/ :results drawer
 sudo systemctl start minecraft
 #+END_SRC
+
+The Ansible role =mc= covers this process on a brand-new Ubuntu instance.
+
+Up next, we will configure ACM Live.
+
+* ACM Live
+
+#+BEGIN_QUOTE
+This is where the fun begins.
+#+END_QUOTE
+
+Up until now, most instances have been easy to deploy. ACM Live is undoubtedly the
+largest and most intricate instance to deploy. It is a self-hosted [[https://bigbluebutton.org/][BigBlueButton]] instance
+with additional branding added to the frontend for it, [[https://github.com/bigbluebutton/greenlight][Greenlight]].
+
+Fortunately, however, Aaron Eason ensured to document his entire escapade whilst
+configuring this behemoth piece of software, documentation which shall be
+transcribed here. Thanks, Aaron!
+
+In the case of ACM Live, it is **highly recommended** that this is all installed
+using the provided Ansible playbook. Ansible is far more likely to get
+everything right than running commands manually. Additionally, make sure that
+you have a lot of time after you run the commands here, as ACM Live takes a
+while to configure and deploy.
+
+-----
+
+Remember to configure the remote machine to be able to connect to it using your
+SSH keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using
+a Vagrant box, use this command to import the =live= SSH settings to your
+configuration:
+
+#+BEGIN_SRC sh
+vagrant ssh-config --host live >> $HOME/.ssh/config
+#+END_SRC
+
+Most, if not all, command blocks following this line are run by =root=, so
+become =root= before continuing.
+
+We will begin by updating the Ubuntu instance entirely:
+#+BEGIN_SRC dir /ssh:live|sudo:live:~/ :results drawer
+apt update && apt upgrade -y
+#+END_SRC
+
+Afterwards, we'll install BigBlueButton using their install script. We'll also remove
+the demo. This will take a while:
+#+BEGIN_SRC sh :dir /ssh:live|sudo:live:~/ :results drawer
+wget -qO- https://ubuntu.bigbluebutton.org/bbb-install.sh \
+    | bash -s -- -v xenial-220 -s live.acmucsd.com -e dev@acmucsd.org -g
+apt-get purge bbb-demo
+#+END_SRC
+
+Now that it BBB is installed, we'll need to update the welcome message for ACM Live streams:
+Add these properties to the BBB properties file:
+#+BEGIN_SRC sh :dir /ssh:live|sudo:live:~/ :results drawer
+cat <<EOF >> /usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties
+defaultWelcomeMessage=Welcome to <b>%%CONFNAME%%</b>!<br><br>If you haven't already, please sign in at ACM's <a href="https://members.acmucsd.com/"><u>Membership Portal</u></a>.
+defaultWelcomeMessageFooter=Thank you for using <strong>ACM Live</strong>.
+EOF
+#+END_SRC
+
+We will also need to configure HTTPS redirecting to BBB in the Nginx configuration file
+provided by BBB:
+#+BEGIN_SRC sh :dir /ssh:live|sudo:live:~/ :results drawer
+# Change to HTTPS
+sudo sed -i 's/80/443 ssl/g' /etc/nginx/sites-available/bigbluebutton
+# Add heredoc to beginning of file
+sudo cat <<EOF /etc/nginx/sites-available/bigbluebutton > /etc/nginx/sites-available/bigbluebutton
+server {
+  listen 80;
+  listen [::]:80;
+  server_name live.acmucsd.com;
+  return 301 https://$server_name$request_uri;
+}
+EOF
+#+END_SRC
+
+A backup functionality for ACM Live is also required to be coded, which requires
+=rclone= installed again, as well as another Google service account credentials JSON.
+Follow the steps from the "Minecraft" section to obtain another set of credentials.
+
+Now BBB is fully configured, we can begin configuring its frontend, Greenlight.
+We'll begin by creating an admin account. You may set the user password using
+environment variables:
+#+BEGIN_SRC sh :dir /ssh:live|sudo:live:~/ :results drawer
+export PASSWORD= # insert password for admin account here
+docker exec greenlight-v2 bundle exec rake user:create["ACM Live","live@acmucsd.org","$PASSWORD","admin"]
+#+END_SRC
+
+Once the Admin account is created, log in with it at =live.acmucsd.com= and get to the admin panel.
+There you should:
+- Change "regular color" to =#fc3b7d=
+- Set branding image to the file located at =files/live/acmlive.png=
+- Set registration policy to "Join by Invitation"
+
+You may now also invite users at your leisure using the admin account or create
+accounts using the above =docker exec= command. Administrator panel is recommended, however.
