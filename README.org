@@ -16,6 +16,14 @@ stack.
 
 Deployment and provisioning of instances supported by Ansible and Terraform.
 
+* TL;DR
+
+Update any changes for the infrastructure, configuration files or environment variables, then run:
+#+BEGIN_SRC sh
+terraform apply
+ansible-playbook -i production stack.yml
+#+END_SRC
+
 * Tech Stack Layout
 The tech stack has the following main services:
 - Membership Portal UI & API
@@ -87,11 +95,19 @@ resource "aws_instance" "live" {
     Name = "ACM Live"
   }
 }
-
 #+END_SRC
 
-Minecraft is too expensive to run on AWS; a third-party provider might be more
-viable in terms of budget. For now, we'll exclude from AWS provisioning.
+Minecraft also runs on a beefy instance; we'll keep it simple with
+an Ubuntu image, though:
+#+BEGIN_SRC terraform :tangle instances.tf
+resource "aws_instance" "minecraft" {
+  ami           = "ami-0cd230f950c3de5d8"
+  instance_type = "t3a.medium"
+  tags {
+    Name = "Minecraft Server"
+  }
+}
+#+END_SRC
 
 We will also include instances for the membership portal; we will need
 one for the API, and we'll use AWS' RDS in order to host the PostgreSQL
@@ -100,7 +116,7 @@ database:
 #+BEGIN_SRC terraform :tangle instances.tf
 resource "aws_instance" "membership-portal" {
   ami           = "ami-0a63cd87767e10ed4"
-  instance_type = "t3a.small"
+  instance_type = "t3a.micro"
   tags {
     Name = "Membership Portal API"
   }
@@ -126,13 +142,14 @@ Using the [[https://calculator.aws][AWS Calculator]], we obtain the cost for all
 | BreadBot            | t3a.nano      |           5.29 |
 | Pass                | t3a.nano      |           5.29 |
 | ACM Live            | m5a.large     |          85.73 |
-| Portal API          | t3a.small     |          17.48 |
+| Minecraft           | t3a.medium    |          34.96 |
+| Portal API          | t3a.micro     |           9.38 |
 | Portal Database     | db.t3.micro   |          16.55 |
 |---------------------+---------------+----------------|
-| Total Cost / Month: |               |         130.34 |
-| Total Cost / Year:  |               |        1564.08 |
+| Total Cost / Month: |               |          157.2 |
+| Total Cost / Year:  |               |         1886.4 |
 |---------------------+---------------+----------------|
-#+TBLFM: @7$3=vsum(@I..@II)::@8$3=vsum(@I..@II)*12
+#+TBLFM: @8$3=vsum(@I..@II)::@9$3=vsum(@I..@II)*12
 
 Assuming all goes well, running Terraform will deploy the stack.
 #+BEGIN_SRC sh

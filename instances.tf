@@ -30,9 +30,17 @@ resource "aws_instance" "live" {
   }
 }
 
+resource "aws_instance" "minecraft" {
+  ami           = "ami-0cd230f950c3de5d8"
+  instance_type = "t3a.medium"
+  tags {
+    Name = "Minecraft Server"
+  }
+}
+
 resource "aws_instance" "membership-portal" {
   ami           = "ami-0a63cd87767e10ed4"
-  instance_type = "t3a.small"
+  instance_type = "t3a.micro"
   tags {
     Name = "Membership Portal API"
   }
