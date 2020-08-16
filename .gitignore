@@ -53,3 +53,6 @@ override.tf.json
 
 # *.json files are also ignored due to possibly containing credentials
 *.json
+
+# Remove any archive files from Org-mode or otherwise
+*_archive
