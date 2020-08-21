@@ -1,0 +1,23 @@
+---
+- name: "Ensure user for password manager exists."
+  user:
+    name: pass
+    comment: Password Manager Account
+    group: docker
+- name: "Ensure Docker configuration and envfiles exist."
+  copy:
+    src: "{{ role_path }}/files/"
+    dest: "/home/pass/"
+    owner: pass
+    group: docker
+    mode: "0644"
+- name: "Ensure folder for bitwarden_rs to store internal data exists."
+  file:
+    path: "/home/pass/bw-data"
+    state: directory
+    owner: pass
+    group: docker
+    mode: "0755"
+- name: "Start Docker Compose setup."
+  docker_compose:
+    project_src: "/home/pass/"

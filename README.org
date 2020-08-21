@@ -18,9 +18,15 @@ Deployment and provisioning of instances supported by Ansible and Terraform.
 
 * TL;DR
 
-Update any changes for the infrastructure, configuration files or environment variables, then run:
+Update any changes for the infrastructure, configuration files or environment variables.
+Start the instances:
 #+BEGIN_SRC sh
 terraform apply
+#+END_SRC
+
+Afterwards, add your private SSH key to each of the hosts and run this:
+#+BEGIN_SRC sh
+ansible-galaxy install -r requirements.yml
 ansible-playbook -i production stack.yml
 #+END_SRC
 
@@ -250,9 +256,9 @@ Second, we'll need to copy over the Docker Compose file for the =pass= instance,
 in the repo, along with the environment variables for it:
 
 #+BEGIN_SRC sh
-scp ./files/pass/docker-compose.yml pass:~/
-scp ./files/pass/.env pass:~/
-scp ./files/pass/Caddyfile pass:~/
+scp ./roles/pass/files/docker-compose.yml pass:~/
+scp ./roles/pass/files/.env pass:~/
+scp ./roles/pass/files/Caddyfile pass:~/
 #+END_SRC
 
 Afterwards, we'll want to log into the pass instance and create the directory used
@@ -268,7 +274,14 @@ Afterwards, all we have to do is spin up the Docker Compose service.
 sudo docker-compose up -d
 #+END_SRC
 
-The Ansible role =pass= covers this process for a brand new Ubuntu instance.
+The Ansible role =pass= covers the installation process of the password manager
+for a brand new Ubuntu instance. You will also need to deploy the =gerlingguy.docker=
+role for the instance.
+Run the =pass.yml= playbook to configure the password manager:
+
+#+BEGIN_SRC sh :results drawer
+ansible-playbook -i production pass.yml
+#+END_SRC
 
 Up next, we will configure BreadBot.
 

@@ -1,0 +1,16 @@
+---
+- hosts: pass
+  become: yes
+  vars:
+    pip_install_packages:
+      # Latest pip is required to install docker-compose
+      - name: pip
+        state: latest
+      - setuptools
+      - docker
+      - docker-compose
+  roles:
+    - common
+    - geerlingguy.docker
+    - geerlingguy.pip
+    - pass
