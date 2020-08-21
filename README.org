@@ -317,7 +317,7 @@ Second, we will clone the Git repo for BreadBot in the home directory:
 We'll also assume the main user to run BreadBot is saved in the environment variable
 =BREADBOT_USER= on the remote shell:
 
-#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer :var BREADBOT_USER="breadbot"
+#+BEGIN_SRC sh :dir /ssh:bot|sudo:bot:~/ :results drawer :var BREADBOT_USER="bot"
 sudo mkdir -p /opt
 git clone https://github.com/acmucsd/discord-bot /opt/discord-bot
 sudo chown -R $BREADBOT_USER:$BREADBOT_USER /opt/discord-bot
@@ -342,7 +342,8 @@ you can find it at =files/breadbot/service.conf= but in all essence, the importa
 #+BEGIN_SRC conf
 [Service]
 EnvironmentFile=/opt/discord-bot/.env
-ExecStart=npm run start
+ExecStart=/usr/bin/npm run start
+ExecStop=/usr/bin/pkill -f npm
 WorkingDirectory=/opt/discord-bot
 #+END_SRC
 
@@ -365,7 +366,13 @@ sudo systemctl daemon-reload
 sudo systemctl start breadbot.service
 #+END_SRC
 
-The Ansible role =breadbot= covers this process for a brand new Ubuntu instance.
+The Ansible role =breadbot= covers the installation process of BreadBot
+for a brand new Ubuntu instance. You will also need to deploy the =gerlingguy.nodejs=
+role for the instance.
+Run the =bot.yml= playbook to configure the password manager:
+#+BEGIN_SRC sh :results drawer
+ansible-playbook -i production bot.yml
+#+END_SRC
 
 * Minecraft
 

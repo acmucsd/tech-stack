@@ -6,8 +6,9 @@ After=network.target
 [Service]
 EnvironmentFile=/opt/discord-bot/.env
 Type=simple
-User=breadbot
-ExecStart=npm run start
+User=bot
+ExecStart=/usr/bin/npm run start
+ExecStop=/usr/bin/pkill -f npm
 WorkingDirectory=/opt/discord-bot
 Restart=on-failure
 

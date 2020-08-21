@@ -1,0 +1,44 @@
+---
+- name: "Ensure user for BreadBot exists."
+  user:
+    name: bot
+    comment: BreadBot Account
+- name: "Install dependencies to build Node modules for BreadBot."
+  apt:
+    pkg:
+      - g++
+      - gcc
+      - make
+    state: latest
+- name: "Get latest version of the BreadBot Git repo"
+  git:
+    repo: "https://github.com/acmucsd/discord-bot"
+    dest: /opt/discord-bot
+- name: "Pass ownership of BreadBot repo to BreadBot user."
+  file:
+    path: /opt/discord-bot
+    owner: bot
+    recurse: yes
+- name: "Upload envfile for BreadBot."
+  copy:
+    src: "{{ role_path }}/files/.env"
+    dest: /opt/discord-bot/
+    owner: bot
+- name: "Install npm dependencies for BreadBot."
+  become: true
+  become_user: bot
+  npm:
+    path: /opt/discord-bot
+- name: "Upload service file for BreadBot."
+  copy:
+    src: "{{ role_path }}/files/breadbot.service"
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+- name: "Refresh daemon for Systemd."
+  systemd:
+    daemon_reload: yes
+- name: "Ensure BreadBot service is started."
+  systemd:
+    name: breadbot
+    state: started

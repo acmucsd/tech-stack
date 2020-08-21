@@ -1,0 +1,7 @@
+---
+- hosts: bot
+  become: yes
+  roles:
+    - common
+    - geerlingguy.nodejs
+    - breadbot
