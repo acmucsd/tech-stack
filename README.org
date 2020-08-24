@@ -430,10 +430,10 @@ sudo chown -R minecraft:minecraft /opt/backup
 
 Afterwards, we'll transfer the configuration files there. Run this on your local machine:
 #+BEGIN_SRC sh
-scp ./files/mc/rclone.conf mc:~/
-scp ./files/mc/gdrive.service mc:~/
-scp ./files/mc/credentials.json mc:~/
-scp ./files/mc/minecraft.service mc:~/
+scp ./roles/mc/files/rclone.conf mc:~/
+scp ./roles/mc/files/gdrive.service mc:~/
+scp ./roles/mc/files/credentials.json mc:~/
+scp ./roles/mc/files/minecraft.service mc:~/
 #+END_SRC
 
 Then run this on the server instance:
@@ -539,7 +539,13 @@ And finally, after many commands, you may now start the Minecraft server:
 sudo systemctl start minecraft
 #+END_SRC
 
-The Ansible role =mc= covers this process on a brand-new Ubuntu instance.
+The Ansible role =mc= covers the installation process of the Minecraft server
+for a brand new Ubuntu instance. I recommend you run the playbook, though, as this
+server requires additional roles.
+Run the =bot.yml= playbook to configure the password manager:
+#+BEGIN_SRC sh :results drawer
+ansible-playbook -i production mc.yml
+#+END_SRC
 
 Up next, we will configure ACM Live.
 

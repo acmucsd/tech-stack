@@ -1,0 +1,17 @@
+---
+- hosts: mc
+  become: yes
+  vars:
+    caddy_config: |
+      mc.acmucsd.com {
+        root * /opt/minecraft/map
+        file_server
+      }
+
+  roles:
+    - common
+    - geerlingguy.java
+    - minecraft-overviewer
+    - borgbackup
+    - mc
+    - caddy_ansible.caddy_ansible

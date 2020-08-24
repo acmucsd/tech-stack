@@ -1,0 +1,15 @@
+---
+- name: "Add apt source entry for Minecraft Overviewer"
+  apt_repository:
+    repo: deb https://overviewer.org/debian ./
+    filename: minecraft-overviewer
+    state: present
+- name: "Add apt GPG key for Minecraft Overviewer repository"
+  apt_key:
+    url: https://overviewer.org/debian/overviewer.gpg.asc
+    state: present
+- name: "Update apt cache and install (or update) Minecraft Overviewer"
+  apt_cache:
+    name: minecraft-overviewer
+    state: latest
+    refresh_cache: yes

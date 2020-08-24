@@ -1,3 +1,4 @@
 ---
 - import_playbook: pass.yml
 - import_playbook: bot.yml
+- import_playbook: mc.yml

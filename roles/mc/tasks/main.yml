@@ -1,0 +1,109 @@
+---
+- name: "Make sure we have a 'wheel' group"
+  group:
+    name: wheel
+    state: present
+- name: "Allow 'wheel' group to have passwordless sudo"
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+    validate: "visudo -cf %s"
+- name: "Create Minecraft user account"
+  user:
+    name: minecraft
+    group: wheel
+    comment: Minecraft Server Account
+    state: present
+- name: "Ensure backup configuration directory exists"
+  file:
+    path: "/opt/backup"
+    owner: minecraft
+    state: directory
+- name: "Transfer Rclone configuration to host"
+  copy:
+    src: "{{ role_path }}/files/rclone.conf"
+    dest: "/opt/backup/"
+    owner: minecraft
+- name: "Transfer Gdrive mount service unit to host"
+  copy:
+    src: "{{ role_path }}/files/gdrive.service"
+    dest: "/etc/systemd/system/"
+    owner: root
+- name: "Transfer Minecraft server service unit to host"
+  copy:
+    src: "{{ role_path }}/files/minecraft.service"
+    dest: "/etc/systemd/system/"
+    owner: root
+- name: "Transfer Gdrive service account credentials to host"
+  copy:
+    src: "{{ role_path }}/files/credentials.json"
+    dest: "/opt/backup/"
+    owner: minecraft
+- name: "Ensure Gdrive mount directory exists"
+  file:
+    path: "/mnt/gdrive"
+    owner: minecraft
+    state: directory
+- name: "Refresh daemon for Systemd."
+  systemd:
+    daemon_reload: yes
+- name: "Start Gdrive mount service"
+  systemd:
+    name: gdrive
+    state: started
+- name: "Find out latest backup made in Minecraft Borg repository"
+  environment: BORG_PASSPHRASE='jyPr5QToT&Wca6hfrvtZA5'
+  shell:
+    cmd: "borg list --last 1 /mnt/gdrive/backup | cut -d ' ' -f1"
+    register: last_borg_backup_command
+- name: "Extract latest Borg backup for Minecraft server"
+  shell:
+    chdir: "/"
+    cmd: "borg extract /mnt/gdrive/backup::{{ last_borg_backup_command.stdout }}"
+  async: 1800
+  poll: 0
+  register: minecraft_restore_job
+- name: "Add nightly maintenance script to crontab"
+  cron:
+    name: "Minecraft Nightly Script"
+    minute: "0"
+    hour: "5"
+    user: minecraft
+    job: "/opt/minecraft/nightly.sh"
+- name: "Wait for Minecraft restore job to end"
+  async_status:
+    jid: "{{ minecraft_restore_job.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 120
+- name: "Ensure Minecraft user owns minecraft configuration directory"
+  # Possibly redundant, but won't hurt
+  file:
+    path: "/opt/minecraft"
+    user: minecraft
+    state: directory
+- name: "Get latest 1.15.2 Minecraft Paper server release"
+  get_url:
+    url: https://papermc.io/api/v1/paper/1.15.2/latest/download
+    dest: "/opt/minecraft/paper.jar"
+    owner: minecraft
+- name: "Create Overviewer map for Minecraft world"
+  become: yes
+  become_user: minecraft
+  shell:
+    cmd: "overviewer.py /opt/minecraft/world /opt/minecraft/map"
+  async: 1800
+  poll: 0
+  register: overviewer_render_job
+- name: "Wait for Overviewer map to render"
+  async_status:
+    jid: "{{ overviewer_render_job.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 120
+- name: "Ensure Minecraft server is started"
+  systemd:
+    name: minecraft
+    state: started

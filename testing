@@ -10,3 +10,8 @@ all:
         192.168.60.3:
           ansible_user: vagrant
           ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
+    mc:
+      hosts:
+        192.168.60.4:
+          ansible_user: vagrant
+          ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key

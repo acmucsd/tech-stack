@@ -1,0 +1,9 @@
+---
+- name: "Add Borg Backup PPA"
+  apt_repository:
+    repo: ppa:costamagnagianfranco/borgbackup
+- name: "Install Borg Backup using apt"
+  apt:
+    name: borgbackup
+    state: latest
+    refresh_cache: yes
