@@ -14,21 +14,23 @@
   git:
     repo: "https://github.com/acmucsd/discord-bot"
     dest: /opt/discord-bot
-- name: "Pass ownership of BreadBot repo to BreadBot user."
-  file:
-    path: /opt/discord-bot
-    owner: bot
-    recurse: yes
 - name: "Upload envfile for BreadBot."
   copy:
     src: "{{ role_path }}/files/.env"
     dest: /opt/discord-bot/
     owner: bot
+    group: bot
 - name: "Install npm dependencies for BreadBot."
-  become: true
-  become_user: bot
-  npm:
-    path: /opt/discord-bot
+  command: npm install
+  become: yes
+  args:
+    chdir: /opt/discord-bot
+- name: "Fix permissions for BreadBot repo."
+  file:
+    path: /opt/discord-bot/
+    owner: bot
+    group: bot
+    recurse: yes
 - name: "Upload service file for BreadBot."
   copy:
     src: "{{ role_path }}/files/breadbot.service"

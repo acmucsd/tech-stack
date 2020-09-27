@@ -18,6 +18,17 @@
     owner: pass
     group: docker
     mode: "0755"
-- name: "Start Docker Compose setup."
-  docker_compose:
-    project_src: "/home/pass/"
+- name: "Add service unit file for Password Manager to Systemd."
+  copy:
+    remote_src: yes
+    src: "/home/pass/pass.service"
+    dest: "/etc/systemd/system"
+    owner: root
+    group: root
+- name: "Refresh daemon for Systemd."
+  systemd:
+    daemon_reload: yes
+- name: "Ensure Password Manager service is started."
+  systemd:
+    name: pass
+    state: started

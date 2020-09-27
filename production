@@ -1,0 +1,14 @@
+all:
+  children:
+    pass:
+      hosts:
+        pass.acmucsd.com:
+          ansible_user: ubuntu
+    bot:
+      hosts:
+        bot.acmucsd.com:
+          ansible_user: ubuntu
+    mc:
+      hosts:
+        mc.acmucsd.com:
+          ansible_user: ubuntu
