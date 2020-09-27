@@ -56,3 +56,9 @@ override.tf.json
 
 # Remove any archive files from Org-mode or otherwise
 *_archive
+
+# Remove any mention of the Bitwarden data folder, should it be backed up
+**/bw-data/*
+
+# Also remove backup of Minecraft world, as it should not be checked into VCS
+/MinecraftWorld/
