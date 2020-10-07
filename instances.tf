@@ -35,6 +35,15 @@ resource "aws_security_group" "allow_https_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+
+  ingress {
+    from_port = 16384
+    to_port   = 32768
+    protocol  = "udp"
+
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -67,15 +76,18 @@ resource "aws_instance" "pass" {
 
 # ACM Live runs on Ubuntu 16.04 LTS
 # We'll use a HVM instance of it, no extra stuff on top.
-# resource "aws_instance" "live" {
-#   ami           = "ami-0a63cd87767e10ed4"
-#   instance_type = "m5a.large"
-#   key_name        = aws_key_pair.stormfirefox1.key_name
-#   security_groups = [aws_security_group.allow_https_ssh.name]
-#   tags {
-#     Name = "ACM Live"
-#   }
-# }
+resource "aws_instance" "live" {
+  ami             = "ami-0a63cd87767e10ed4"
+  instance_type   = "m5a.large"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  root_block_device {
+    volume_size = 94
+  }
+  tags = {
+    Name = "ACM Live"
+  }
+}
 
 # RETIRED TEMPORARILY
 # resource "aws_instance" "minecraft" {

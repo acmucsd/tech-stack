@@ -55,9 +55,6 @@ The other services most likely require a maximum of 1 GB of RAM.[fn:current-stac
 In order to maintain uptime for all components of the stack, each
 service will run on a separate instance of appropriate size.
 
-As of now, AWS takes too much of a cost for all of the services above; therefore,
-we'll split the cost between Azure and AWS.
-
 Additionally, each service will be provisioned with separate Ansible
 playbooks.
 
@@ -146,15 +143,18 @@ with constant workload. We can use =m5= instances:
 #+BEGIN_SRC terraform :tangle instances.tf
 # ACM Live runs on Ubuntu 16.04 LTS
 # We'll use a HVM instance of it, no extra stuff on top.
-# resource "aws_instance" "live" {
-#   ami           = "ami-0a63cd87767e10ed4"
-#   instance_type = "m5a.large"
-#   key_name        = aws_key_pair.stormfirefox1.key_name
-#   security_groups = [aws_security_group.allow_https_ssh.name]
-#   tags {
-#     Name = "ACM Live"
-#   }
-# }
+resource "aws_instance" "live" {
+  ami             = "ami-0a63cd87767e10ed4"
+  instance_type   = "m5a.large"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  root_block_device {
+    volume_size = 94
+  }
+  tags = {
+    Name = "ACM Live"
+  }
+}
 #+END_SRC
 
 Minecraft also runs on a beefy instance; we'll keep it simple with
@@ -919,7 +919,7 @@ Most, if not all, command blocks following this line are run by =root=, so
 become =root= before continuing.
 
 We will begin by updating the Ubuntu instance entirely:
-#+BEGIN_SRC dir /ssh:live|sudo:live:~/ :results drawer
+#+BEGIN_SRC sh :dir /ssh:ubuntu@live.acmucsd.com|sudo:live.acmucsd.com:~/ :results drawer
 apt update && apt upgrade -y
 #+END_SRC
 

@@ -206,15 +206,14 @@ resource "aws_route53_record" "pass-acmucsd-com-A" {
   ttl     = "3600"
 }
 
-# WIP
-# resource "aws_route53_record" "live-acmucsd-com-A" {
-#   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-#   name    = "live.acmucsd.com"
-#   type    = "A"
-#   records = [aws_instance.live.public_ip]
-#   ttl     = "3600"
-# }
-#
+resource "aws_route53_record" "live-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "live.acmucsd.com"
+  type    = "A"
+  records = [aws_instance.live.public_ip]
+  ttl     = "3600"
+}
+
 # resource "aws_route53_record" "mc-acmucsd-com-A" {
 #   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
 #   name    = "mc.acmucsd.com"
