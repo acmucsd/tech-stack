@@ -78,6 +78,22 @@ resource "aws_route53_record" "api-ai-acmucsd-com-A" {
   ttl     = "3600"
 }
 
+resource "aws_route53_record" "open-ai-acmucsd-com-CNAME" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "open.ai.acmucsd.com"
+  type    = "CNAME"
+  records = ["openai-acm-ai.netlify.app"]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "compete-ai-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "compete.ai.acmucsd.com"
+  type    = "A"
+  records = ["34.120.177.157"]
+  ttl     = "3600"
+}
+
 resource "aws_route53_record" "apitest-ai-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "apitest.ai.acmucsd.com"
@@ -193,6 +209,15 @@ resource "aws_route53_record" "vote-acmucsd-com-A" {
 resource "aws_route53_record" "bot-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "bot.acmucsd.com"
+  type    = "A"
+  records = [aws_instance.breadbot.public_ip]
+  ttl     = "3600"
+}
+
+
+resource "aws_route53_record" "url-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "url.acmucsd.com"
   type    = "A"
   records = [aws_instance.breadbot.public_ip]
   ttl     = "3600"
