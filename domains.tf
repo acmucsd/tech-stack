@@ -239,10 +239,10 @@ resource "aws_route53_record" "live-acmucsd-com-A" {
   ttl     = "3600"
 }
 
-# resource "aws_route53_record" "mc-acmucsd-com-A" {
-#   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-#   name    = "mc.acmucsd.com"
-#   type    = "A"
-#   records = [aws_instance.minecraft.public_ip]
-#   ttl     = "3600"
-# }
+resource "aws_route53_record" "mc-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "mc.acmucsd.com"
+  type    = "A"
+  records = ["51.81.26.152"]
+  ttl     = "3600"
+}
