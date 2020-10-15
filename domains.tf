@@ -6,6 +6,14 @@ resource "aws_route53_zone" "acmucsd-com-public" {
   }
 }
 
+resource "aws_route53_zone" "acmurl-com-public" {
+  name    = "acmurl.com"
+  comment = "ACM's domain used for URL shortening."
+
+  tags = {
+  }
+}
+
 resource "aws_route53_record" "acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "acmucsd.com"
@@ -214,6 +222,14 @@ resource "aws_route53_record" "bot-acmucsd-com-A" {
   ttl     = "3600"
 }
 
+
+resource "aws_route53_record" "acmurl-com-A" {
+  zone_id = aws_route53_zone.acmurl-com-public.zone_id
+  name    = "acmurl.com"
+  type    = "A"
+  records = [aws_instance.breadbot.public_ip]
+  ttl     = "3600"
+}
 
 resource "aws_route53_record" "url-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
