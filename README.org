@@ -33,8 +33,7 @@ ansible-playbook -i production stack.yml
 * Tech Stack Layout
 The tech stack has the following main services:
 - Membership Portal UI & API
-- ACM Live
-- Minecraft Server
+- ACMURL
 - BreadBot
 - Password Manager
 
@@ -45,12 +44,7 @@ We will begin by provisioning instances for each service, and then we'll proceed
 with configuring the domains for each of them.
 
 * Provisioning
-Speaking with Aaron Eason about the system specifications of his previous instances
-for each service, we know that:
-- ACM Live requires 16 GB of RAM and 4 vCPU cores.
-- The Minecraft server requires 8 GB of RAM.
-
-The other services most likely require a maximum of 1 GB of RAM.[fn:current-stack-requirements]
+All of the services above most likely require a maximum of 1 GB of RAM.[fn:current-stack-requirements]
 
 In order to maintain uptime for all components of the stack, each
 service will run on a separate instance of appropriate size.
@@ -136,29 +130,9 @@ resource "aws_instance" "pass" {
 }
 #+END_SRC
 
-ACM Live requires a more demanding server. Particularly, =t3= instances
-shouldn't be used due to their potential CPU throttling on a server
-with constant workload. We can use =m5= instances:
-
-#+BEGIN_SRC terraform :tangle instances.tf
-# ACM Live runs on Ubuntu 16.04 LTS
-# We'll use a HVM instance of it, no extra stuff on top.
-resource "aws_instance" "live" {
-  ami             = "ami-0a63cd87767e10ed4"
-  instance_type   = "m5a.large"
-  key_name        = aws_key_pair.stormfirefox1.key_name
-  security_groups = [aws_security_group.allow_https_ssh.name]
-  root_block_device {
-    volume_size = 94
-  }
-  tags = {
-    Name = "ACM Live"
-  }
-}
-#+END_SRC
-
-Minecraft also runs on a beefy instance; we'll keep it simple with
-an Ubuntu image, though:
+Additionally, we may in the future, move Minecraft to AWS; in which case
+we'll need to provision that as well in the future. We'll put it in here
+for prosperity.
 #+BEGIN_SRC terraform :tangle instances.tf
 # RETIRED TEMPORARILY
 # resource "aws_instance" "minecraft" {
@@ -219,15 +193,13 @@ Using the [[https://calculator.aws][AWS Calculator]], we obtain the cost for all
 |---------------------+---------------+----------------|
 | BreadBot            | t3a.nano      |           5.29 |
 | Pass                | t3a.nano      |           5.29 |
-| ACM Live            | m5a.large     |          85.73 |
-| Minecraft           | t3a.medium    |          34.96 |
 | Portal API          | t3a.micro     |           9.38 |
 | Portal Database     | db.t3.micro   |          16.55 |
 |---------------------+---------------+----------------|
-| Total Cost / Month: |               |          157.2 |
-| Total Cost / Year:  |               |         1886.4 |
+| Total Cost / Month: |               |          36.51 |
+| Total Cost / Year:  |               |         438.12 |
 |---------------------+---------------+----------------|
-#+TBLFM: @8$3=vsum(@I..@II)::@9$3=vsum(@I..@II)*12
+#+TBLFM: @6$3=vsum(@I..@II)::@7$3=vsum(@I..@II)*12
 
 Assuming all goes well, running Terraform will deploy the stack.
 #+BEGIN_SRC sh
@@ -250,6 +222,14 @@ is where most of our tech stack is linked to:
 resource "aws_route53_zone" "acmucsd-com-public" {
   name    = "acmucsd.com"
   comment = "ACM's main domain for stuff."
+
+  tags = {
+  }
+}
+
+resource "aws_route53_zone" "acmurl-com-public" {
+  name    = "acmurl.com"
+  comment = "ACM's domain used for URL shortening."
 
   tags = {
   }
@@ -339,6 +319,22 @@ resource "aws_route53_record" "api-ai-acmucsd-com-A" {
   name    = "api.ai.acmucsd.com"
   type    = "A"
   records = ["104.155.168.98"]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "open-ai-acmucsd-com-CNAME" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "open.ai.acmucsd.com"
+  type    = "CNAME"
+  records = ["openai-acm-ai.netlify.app"]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "compete-ai-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "compete.ai.acmucsd.com"
+  type    = "A"
+  records = ["34.120.177.157"]
   ttl     = "3600"
 }
 
@@ -466,12 +462,28 @@ resource "aws_route53_record" "vote-acmucsd-com-A" {
 #+END_SRC
 
 Each instance from the ones we provisioned has their own domain, so let's assign A records for all
-the instances we just deployed:
+the instances we just deployed. We'll set two domains for ACMURL: =acmurl.com= and =url.acmucsd.com=:
 
 #+BEGIN_SRC terraform :tangle domains.tf
 resource "aws_route53_record" "bot-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "bot.acmucsd.com"
+  type    = "A"
+  records = [aws_instance.breadbot.public_ip]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "acmurl-com-A" {
+  zone_id = aws_route53_zone.acmurl-com-public.zone_id
+  name    = "acmurl.com"
+  type    = "A"
+  records = [aws_instance.breadbot.public_ip]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "url-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "url.acmucsd.com"
   type    = "A"
   records = [aws_instance.breadbot.public_ip]
   ttl     = "3600"
@@ -485,22 +497,13 @@ resource "aws_route53_record" "pass-acmucsd-com-A" {
   ttl     = "3600"
 }
 
-# WIP
-# resource "aws_route53_record" "live-acmucsd-com-A" {
-#   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-#   name    = "live.acmucsd.com"
-#   type    = "A"
-#   records = [aws_instance.live.public_ip]
-#   ttl     = "3600"
-# }
-#
-# resource "aws_route53_record" "mc-acmucsd-com-A" {
-#   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-#   name    = "mc.acmucsd.com"
-#   type    = "A"
-#   records = [aws_instance.minecraft.public_ip]
-#   ttl     = "3600"
-# }
+resource "aws_route53_record" "mc-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "mc.acmucsd.com"
+  type    = "A"
+  records = ["51.81.26.152"]
+  ttl     = "3600"
+}
 #+END_SRC
 
 * Before Configuring

@@ -222,7 +222,6 @@ resource "aws_route53_record" "bot-acmucsd-com-A" {
   ttl     = "3600"
 }
 
-
 resource "aws_route53_record" "acmurl-com-A" {
   zone_id = aws_route53_zone.acmurl-com-public.zone_id
   name    = "acmurl.com"
