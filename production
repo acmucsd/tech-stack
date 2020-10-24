@@ -12,3 +12,11 @@ all:
       hosts:
         mc.acmucsd.com:
           ansible_user: ubuntu
+    ai-api:
+      hosts:
+        api.ai.acmucsd.com:
+          ansible_user: ubuntu
+    ai-api-testing:
+      hosts:
+        apitest.ai.acmucsd.com:
+          ansible_user: ubuntu

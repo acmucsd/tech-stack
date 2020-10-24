@@ -1,0 +1,11 @@
+---
+- name: "Run Testing API Docker container for ACM AI's API"
+  community.general.docker_container:
+    name: "testing-api"
+    image: acmucsd/acm-ai-api-testing
+    state: started
+    restart: true
+    pull: true
+    ports:
+      - "9000:80"
+  when: testing == true

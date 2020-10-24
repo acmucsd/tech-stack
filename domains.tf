@@ -106,7 +106,7 @@ resource "aws_route53_record" "apitest-ai-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "apitest.ai.acmucsd.com"
   type    = "A"
-  records = ["35.208.23.117"]
+  records = [aws_instance.ai-api-testing.public_ip]
   ttl     = "3600"
 }
 
@@ -225,6 +225,14 @@ resource "aws_route53_record" "bot-acmucsd-com-A" {
 resource "aws_route53_record" "acmurl-com-A" {
   zone_id = aws_route53_zone.acmurl-com-public.zone_id
   name    = "acmurl.com"
+  type    = "A"
+  records = [aws_instance.breadbot.public_ip]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "www-acmurl-com-A" {
+  zone_id = aws_route53_zone.acmurl-com-public.zone_id
+  name    = "www.acmurl.com"
   type    = "A"
   records = [aws_instance.breadbot.public_ip]
   ttl     = "3600"

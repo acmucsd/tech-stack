@@ -886,28 +886,76 @@ ansible-playbook -i production mc.yml
 #+END_SRC
 
 Up next, we will configure ACM Live.
+* ACM AI API
 
-* ACM Live
+ACM AI has a suborg-specific API used to fulfill their own needs for member outreach,
+such as weekly newsletters and more. Primarily, it's a Docker image served behind a
+HTTPS reverse proxy. This setup is likely to be similar to the Password Manager.
 
-#+BEGIN_QUOTE
-This is where the fun begins.
-#+END_QUOTE
+First, configure the remote machine to be able to connect to it using your SSH
+keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using a
+Vagrant box, use this command to import the =acm-ai-api= settings to your
+configuration:
 
-Up until now, most instances have been easy to deploy. ACM Live is undoubtedly the
-largest and most intricate instance to deploy. It is a self-hosted [[https://bigbluebutton.org/][BigBlueButton]] instance
-with additional branding added to the frontend for it, [[https://github.com/bigbluebutton/greenlight][Greenlight]].
+#+BEGIN_SRC sh
+vagrant ssh-config --host acm-ai-api >> $HOME/.ssh/config
+#+END_SRC
 
-Fortunately, however, Aaron Eason ensured to document his entire escapade whilst
-configuring this behemoth piece of software, documentation which shall be
-transcribed here. Thanks, Aaron!
+First, we'll want to install Docker by following the [[https://docs.docker.com/engine/install/ubuntu/][installation guide]] for Ubuntu:
+#+BEGIN_SRC sh :dir /ssh:acm-ai-api|sudo:acm-ai-api:~/ :results drawer
+sudo apt-get update
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+#+END_SRC
 
-In the case of ACM Live, it is **highly recommended** that this is all installed
-using the provided Ansible playbook. Ansible is far more likely to get
-everything right than running commands manually. Additionally, make sure that
-you have a lot of time after you run the commands here, as ACM Live takes a
-while to configure and deploy.
+Similarly for Docker Compose, using this [[https://docs.docker.com/compose/install/][installation guide]]:
 
------
+#+BEGIN_SRC sh :dir /ssh:acm-ai-api|sudo:acm-ai-api:~/
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+docker-compose --version
+#+END_SRC
+
+
+Fortunately, we are gracefully provided a Docker image that constantly follows the latest
+version on Docker Hub, which fortunately allows for an easy run:
+#+BEGIN_SRC sh :dir /ssh:acm-ai-api|sudo:acm-ai-api:~/ :results drawer
+docker pull acmucsd/acm-ai-api:latest
+docker run -d --name "ACM AI API" -p 9000:9000 acmucsd/acm-ai-api:latest
+#+END_SRC
+
+We'll also need a Caddy instance in front of this Docker container to provide SSL.
+We'll install Caddy first:
+#+BEGIN_SRC sh :dir /ssh:acm-ai-api|sudo:acm-ai-api:~/
+echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" \
+    | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
+sudo apt-get update
+sudo apt-get install -y caddy
+#+END_SRC
+
+We'll save the Caddyfile and then run the service:
+#+BEGIN_SRC sh :dir /ssh:acm-ai-api|sudo:acm-ai-api:~/
+cat <<EOF | sudo tee -a /etc/caddy/Caddyfile
+api.ai.acmucsd.com {
+  reverse_proxy 127.0.0.1:9000
+}
+EOF
+
+sudo systemctl restart caddy
+#+END_SRC
+
 
 Remember to configure the remote machine to be able to connect to it using your
 SSH keys. Either [[https://www.ssh.com/ssh/keygen/][create a new one]] or provide the public key. If developing using

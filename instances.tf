@@ -65,6 +65,16 @@ resource "aws_instance" "pass" {
   }
 }
 
+resource "aws_instance" "ai-api-testing" {
+  ami             = "ami-021809d9177640a20"
+  instance_type   = "t3a.nano"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  tags = {
+    Name = "ACM AI API (Testing)"
+  }
+}
+
 # RETIRED TEMPORARILY
 # resource "aws_instance" "minecraft" {
 #   ami           = "ami-021809d9177640a20"

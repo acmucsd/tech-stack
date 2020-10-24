@@ -2,3 +2,4 @@
 - import_playbook: pass.yml
 - import_playbook: bot.yml
 - import_playbook: mc.yml
+- import_playbook: ai-api.yml

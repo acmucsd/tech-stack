@@ -1,5 +1,9 @@
-- name: geerlingguy.pip
-- name: geerlingguy.docker
-- name: geerlingguy.nodejs
-- name: geerlingguy.java
-- name: caddy_ansible.caddy_ansible
+---
+collections:
+  - name: community.general
+roles:
+  - name: geerlingguy.pip
+  - name: geerlingguy.docker
+  - name: geerlingguy.nodejs
+  - name: geerlingguy.java
+  - name: caddy_ansible.caddy_ansible
