@@ -1,11 +1,37 @@
 ---
+- name: "Copy testing environment file"
+  copy:
+    src: "./.env.test"
+    dest: "~/.env.test"
+    owner: ubuntu
+    backup: true
+  when: testing == true
+- name: "Copy production environment file"
+  copy:
+    src: "./.env.prod"
+    dest: "~/.env.prod"
+    owner: ubuntu
+    backup: true
+  when: testing == false
 - name: "Run Testing API Docker container for ACM AI's API"
   community.general.docker_container:
-    name: "testing-api"
+    name: "testing-ai-api"
     image: acmucsd/acm-ai-api-testing
     state: started
+    env_file: "~/.env.test"
     restart: true
     pull: true
     ports:
-      - "9000:80"
+      - "9000:9000"
   when: testing == true
+- name: "Run API Docker Container for ACM AI's API"
+  community.general.docker_container:
+    name: "ai-api"
+    image: acmucsd/acm-ai-api-testing
+    state: started
+    env_file: "~/.env.prod"
+    restart: true
+    pull: true
+    ports:
+      - "9000:9000"
+  when: testing == false

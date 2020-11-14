@@ -70,11 +70,26 @@ resource "aws_instance" "ai-api-testing" {
   instance_type   = "t3a.nano"
   key_name        = aws_key_pair.stormfirefox1.key_name
   security_groups = [aws_security_group.allow_https_ssh.name]
+  root_block_device {
+    volume_size = 10
+  }
   tags = {
     Name = "ACM AI API (Testing)"
   }
 }
 
+resource "aws_instance" "ai-api" {
+  ami             = "ami-021809d9177640a20"
+  instance_type   = "t3a.nano"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  root_block_device {
+    volume_size = 10
+  }
+  tags = {
+    Name = "ACM AI API"
+  }
+}
 # RETIRED TEMPORARILY
 # resource "aws_instance" "minecraft" {
 #   ami           = "ami-021809d9177640a20"

@@ -7,3 +7,4 @@ roles:
   - name: geerlingguy.nodejs
   - name: geerlingguy.java
   - name: caddy_ansible.caddy_ansible
+  - name: jnv.unattended-upgrades

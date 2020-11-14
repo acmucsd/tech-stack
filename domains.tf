@@ -82,7 +82,7 @@ resource "aws_route53_record" "api-ai-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "api.ai.acmucsd.com"
   type    = "A"
-  records = ["104.155.168.98"]
+  records = [aws_instance.ai-api.public_ip]
   ttl     = "3600"
 }
 

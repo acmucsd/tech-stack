@@ -9,12 +9,43 @@
         reverse_proxy 127.0.0.1:9000
       }
     caddy_setcap: true
-    caddy_systemd_capabilities_enabled: false
+    caddy_systemd_capabilities_enabled: true
     caddy_systemd_capabilities: "CAP_NET_BIND_SERVICE"
   roles:
-    - common
+    - role: jnv.unattended-upgrades
+      unattended_origins_patterns:
+        - "origin=Ubuntu,archive=${distro_codename}-security"
+        - "o=Ubuntu,a=${distro_codename}"
+        - "o=Ubuntu,a=${distro_codename}-updates"
+        - "o=Ubuntu,a=${distro_codename}-proposed-updates"
+      unattended_package_blacklist: [docker, caddy, vim]
     - geerlingguy.pip
     - geerlingguy.docker
     - role: ai-api
       testing: true
+    - caddy_ansible.caddy_ansible
+- hosts: ai-api
+  become: yes
+  vars:
+    pip_install_packages:
+      - name: docker
+    caddy_config: |
+      api.ai.acmucsd.com {
+        reverse_proxy 127.0.0.1:9000
+      }
+    caddy_setcap: true
+    caddy_systemd_capabilities_enabled: true
+    caddy_systemd_capabilities: "CAP_NET_BIND_SERVICE"
+  roles:
+    - role: jnv.unattended-upgrades
+      unattended_origins_patterns:
+        - "origin=Ubuntu,archive=${distro_codename}-security"
+        - "o=Ubuntu,a=${distro_codename}"
+        - "o=Ubuntu,a=${distro_codename}-updates"
+        - "o=Ubuntu,a=${distro_codename}-proposed-updates"
+      unattended_package_blacklist: [docker, caddy, vim]
+    - geerlingguy.pip
+    - geerlingguy.docker
+    - role: ai-api
+      testing: false
     - caddy_ansible.caddy_ansible
