@@ -55,6 +55,17 @@ resource "aws_instance" "breadbot" {
   }
 }
 
+
+resource "aws_instance" "acmurl" {
+  ami             = "ami-021809d9177640a20"
+  instance_type   = "t3a.nano"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  tags = {
+    Name = "ACMURL"
+  }
+}
+
 resource "aws_instance" "pass" {
   ami             = "ami-021809d9177640a20"
   instance_type   = "t3a.nano"
@@ -80,7 +91,7 @@ resource "aws_instance" "ai-api-testing" {
 
 resource "aws_instance" "ai-api" {
   ami             = "ami-021809d9177640a20"
-  instance_type   = "t3a.nano"
+  instance_type   = "t3a.micro"
   key_name        = aws_key_pair.stormfirefox1.key_name
   security_groups = [aws_security_group.allow_https_ssh.name]
   root_block_device {

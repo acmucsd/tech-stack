@@ -226,7 +226,7 @@ resource "aws_route53_record" "acmurl-com-A" {
   zone_id = aws_route53_zone.acmurl-com-public.zone_id
   name    = "acmurl.com"
   type    = "A"
-  records = [aws_instance.breadbot.public_ip]
+  records = [aws_instance.acmurl.public_ip]
   ttl     = "3600"
 }
 
@@ -234,7 +234,7 @@ resource "aws_route53_record" "www-acmurl-com-A" {
   zone_id = aws_route53_zone.acmurl-com-public.zone_id
   name    = "www.acmurl.com"
   type    = "A"
-  records = [aws_instance.breadbot.public_ip]
+  records = [aws_instance.acmurl.public_ip]
   ttl     = "3600"
 }
 
@@ -242,7 +242,7 @@ resource "aws_route53_record" "url-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "url.acmucsd.com"
   type    = "A"
-  records = [aws_instance.breadbot.public_ip]
+  records = [aws_instance.acmurl.public_ip]
   ttl     = "3600"
 }
 
