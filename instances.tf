@@ -2,6 +2,18 @@ provider "aws" {
   region = "us-west-1"
 }
 
+variable "dbName" {
+  type = string
+}
+
+variable "dbUser" {
+  type = string
+}
+
+variable "dbPass" {
+  type = string
+}
+
 resource "aws_key_pair" "stormfirefox1" {
   key_name   = "stormfirefox1-key"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCg6yTXpl91W0s05a7KsiIWOFrDtgw2wg/QH85vunAlxZ9eLmO4Uc4G+PIzrDcc9YUkda3EDOLCheXjJWQCqnrz7JW8IT7I8TI0p4CKRej28K9uzfiqdFpF0//0jfaSreKAcXj/PfUmHmgYlmGCVL0dsgWUnoZsG9hkhBR7IwK03BLJdhNGx18diJa4gek2i8Ppzhxs9Epy3ZUlm0PNuuAOE9GY0lmMRh3bHWpgvrIYADz1IUp2DECn9ERoFhNfYuNUt9r9wsdavriABdaUFIz39ncqXOpzoV/cf0SaRrgoodJUPKo5dYdWQsZjQUEfaWXaWh1aSm1XdUwQYZfqNQHgitTYjEM73WGpSBtQM67HOMjOT72sZwkF5S+/OLDqH+MVFbKBj6ePUtlELkOgDdkss/0rPwdH30f66r3dtrI2vla6d3+oqbXFnIMR6G9ITV5Zyaije8NsaU5QVxjhKr+w+/UgliPZNH6XIYlG4gb1NiAPaGOAHs8JNuPemoBdcQ95B6t2zjLNG2HPYUhVjkpCrOal/5vAtNigZ7k/zw62e7eCeGTEMTgmIHosh1WrUxqfMsagdEjfqYhI1pXAIDCsGTrH6x0hkvtQdvdVtMRNpVaSthR1lOVGRJevDvMxXaQ9NtJMtWSLWSjd1+FNJf3rRFCiAHUIkTC5khoKDJx3RQ== STORM_GPG_2FB5275E"
@@ -119,16 +131,19 @@ resource "aws_instance" "ai-api" {
     Name = "ACM AI API"
   }
 }
-# RETIRED TEMPORARILY
-# resource "aws_instance" "minecraft" {
-#   ami           = "ami-021809d9177640a20"
-#   instance_type = "t3a.medium"
-#   key_name        = aws_key_pair.stormfirefox1.key_name
-#   security_groups = [aws_security_group.allow_https_ssh.name]
-#   tags {
-#     Name = "Minecraft Server"
-#   }
-# }
+
+#resource "aws_instance" "acm-vote" {
+#  ami             = "ami-021809d9177640a20"
+#  instance_type   = "t3a.nano"
+#  key_name        = aws_key_pair.stormfirefox1.key_name
+#  security_groups = [aws_security_group.allow_https_ssh.name]
+#  root_block_device {
+#    volume_size = 10
+#  }
+#  tags = {
+#    Name = "ACM Vote"
+#  }
+#}
 
 # ON STANBY ON HEROKU, WIP
 # resource "aws_instance" "membership-portal" {
@@ -139,14 +154,14 @@ resource "aws_instance" "ai-api" {
 #   }
 # }
 #
-# resource "aws_db_instance" "membership-portal-db" {
-#   allocated_storage = 10
-#   engine            = "postgres"
-#   instance_class    = "db.t3.micro"
-#   name              = var.dbName
-#   username          = var.dbUser
-#   password          = var.dbPass
-# }
+resource "aws_db_instance" "membership-portal-db" {
+  allocated_storage = 10
+  engine            = "postgres"
+  instance_class    = "db.t3.micro"
+  name              = var.dbName
+  username          = var.dbUser
+  password          = var.dbPass
+}
 
 resource "aws_s3_bucket" "acmucsd" {
   bucket = "acmucsd"
