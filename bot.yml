@@ -9,5 +9,6 @@
         - "o=Ubuntu,a=${distro_codename}-updates"
         - "o=Ubuntu,a=${distro_codename}-proposed-updates"
       unattended_package_blacklist: [nodejs, vim]
+    - geerlingguy.node_exporter
     - geerlingguy.nodejs
     - breadbot

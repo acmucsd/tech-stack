@@ -8,3 +8,6 @@ roles:
   - name: geerlingguy.java
   - name: caddy_ansible.caddy_ansible
   - name: jnv.unattended-upgrades
+  - name: atosatto.grafana
+  - name: cloudalchemy.prometheus
+  - name: geerlingguy.node_exporter

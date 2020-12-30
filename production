@@ -20,7 +20,11 @@ all:
       hosts:
         apitest.ai.acmucsd.com:
           ansible_user: ubuntu
-    ai-api:
+    monitor:
       hosts:
-        api.ai.acmucsd.com:
+        monitor.acmucsd.com:
+          ansible_user: ubuntu
+    url:
+      hosts:
+        acmurl.com:
           ansible_user: ubuntu

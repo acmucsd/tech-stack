@@ -21,6 +21,7 @@
       unattended_package_blacklist: [docker, caddy, vim]
     - geerlingguy.pip
     - geerlingguy.docker
+    - geerlingguy.node_exporter
     - role: ai-api
       testing: true
     - caddy_ansible.caddy_ansible
@@ -46,6 +47,7 @@
       unattended_package_blacklist: [docker, caddy, vim]
     - geerlingguy.pip
     - geerlingguy.docker
+    - geerlingguy.node_exporter
     - role: ai-api
       testing: false
     - caddy_ansible.caddy_ansible

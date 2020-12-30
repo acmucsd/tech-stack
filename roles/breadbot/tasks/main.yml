@@ -43,4 +43,5 @@
 - name: "Ensure BreadBot service is started."
   systemd:
     name: breadbot
-    state: started
+    state: restarted
+    enabled: yes
