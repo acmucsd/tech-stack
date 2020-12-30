@@ -254,10 +254,26 @@ resource "aws_route53_record" "pass-acmucsd-com-A" {
   ttl     = "3600"
 }
 
+resource "aws_route53_record" "monitor-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "monitor.acmucsd.com"
+  type    = "A"
+  records = [aws_instance.monitor.public_ip]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "prometheus-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "prometheus.acmucsd.com"
+  type    = "A"
+  records = [aws_instance.monitor.public_ip]
+  ttl     = "3600"
+}
+
 resource "aws_route53_record" "mc-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "mc.acmucsd.com"
   type    = "A"
-  records = ["51.81.26.152"]
+  records = ["51.81.62.38"]
   ttl     = "3600"
 }

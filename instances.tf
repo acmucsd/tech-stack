@@ -35,6 +35,14 @@ resource "aws_security_group" "allow_https_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port = 9100
+    to_port   = 9100
+    protocol  = "tcp"
+
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -73,6 +81,16 @@ resource "aws_instance" "pass" {
   security_groups = [aws_security_group.allow_https_ssh.name]
   tags = {
     Name = "Password Manager"
+  }
+}
+
+resource "aws_instance" "monitor" {
+  ami             = "ami-021809d9177640a20"
+  instance_type   = "t3a.micro"
+  key_name        = aws_key_pair.stormfirefox1.key_name
+  security_groups = [aws_security_group.allow_https_ssh.name]
+  tags = {
+    Name = "Monitor"
   }
 }
 
