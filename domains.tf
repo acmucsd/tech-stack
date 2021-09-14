@@ -138,7 +138,15 @@ resource "aws_route53_record" "api-acmucsd-com-CNAME" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
   name    = "api.acmucsd.com"
   type    = "CNAME"
-  records = ["shallow-koi-v9n1nho6ee48b480cn08m1hr.herokudns.com"]
+  records = ["membership-portal-api.app.acmucsd.com"]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "testing-api-acmucsd-com-CNAME" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "testing.api.acmucsd.com"
+  type    = "CNAME"
+  records = ["membership-portal-api-testing.app.acmucsd.com"]
   ttl     = "3600"
 }
 
@@ -158,9 +166,17 @@ resource "aws_route53_record" "hack-acmucsd-com-CNAME" {
   ttl     = "3600"
 }
 
+resource "aws_route53_record" "innovate-acmucsd-com-CNAME" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "innovate.acmucsd.com"
+  type    = "CNAME"
+  records = ["acm-innovate.netlify.app"]
+  ttl     = "3600"
+}
+
 resource "aws_route53_record" "members-test-acmucsd-com-CNAME" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-  name    = "members-test.acmucsd.com"
+  name    = "testing.members.acmucsd.com"
   type    = "CNAME"
   records = ["members-nightly.netlify.app"]
   ttl     = "3600"
@@ -206,11 +222,19 @@ resource "aws_route53_record" "tree-acmucsd-com-CNAME" {
   ttl     = "3600"
 }
 
-resource "aws_route53_record" "vote-acmucsd-com-A" {
+resource "aws_route53_record" "projects-acmucsd-com-CNAME" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-  name    = "vote.acmucsd.com"
+  name    = "projects.acmucsd.com"
+  type    = "CNAME"
+  records = ["acmucsd-projects.netlify.app"]
+  ttl     = "3600"
+}
+
+resource "aws_route53_record" "api-leetcodetracker-acmucsd-com-A" {
+  zone_id = aws_route53_zone.acmucsd-com-public.zone_id
+  name    = "api.leetcodetracker.acmucsd.com"
   type    = "A"
-  records = ["217.156.97.70"]
+  records = ["173.230.148.70"]
   ttl     = "3600"
 }
 
@@ -254,26 +278,26 @@ resource "aws_route53_record" "pass-acmucsd-com-A" {
   ttl     = "3600"
 }
 
-resource "aws_route53_record" "monitor-acmucsd-com-A" {
+resource "aws_route53_record" "metabase-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-  name    = "monitor.acmucsd.com"
+  name    = "metabase.acmucsd.com"
   type    = "A"
-  records = [aws_instance.monitor.public_ip]
+  records = [aws_instance.metabase.public_ip]
   ttl     = "3600"
 }
 
-resource "aws_route53_record" "prometheus-acmucsd-com-A" {
+resource "aws_route53_record" "app-acmucsd-com-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-  name    = "prometheus.acmucsd.com"
+  name    = "app.acmucsd.com"
   type    = "A"
-  records = [aws_instance.monitor.public_ip]
+  records = [aws_instance.membership-portal-dokku.public_ip]
   ttl     = "3600"
 }
 
-resource "aws_route53_record" "mc-acmucsd-com-A" {
+resource "aws_route53_record" "app-acmucsd-com-wildcard-A" {
   zone_id = aws_route53_zone.acmucsd-com-public.zone_id
-  name    = "mc.acmucsd.com"
+  name    = "*.app.acmucsd.com"
   type    = "A"
-  records = ["51.81.62.38"]
+  records = [aws_instance.membership-portal-dokku.public_ip]
   ttl     = "3600"
 }
