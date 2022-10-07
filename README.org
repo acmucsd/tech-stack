@@ -1,6 +1,8 @@
 #+TITLE: ACM Tech Stack
 #+DESCRIPTION: Moving all of ACM's services to cloud providers is going to be a tough one.
 
+*Update: For the foreseeable future, this repository will be archived. Will consider revival when infrastructure returns to deployment using Ansible and Terraform.*
+
 This repository includes all the files necessary to describe and deploy the
 technology stack of ACM @ UCSD. You will find files such as:
 
